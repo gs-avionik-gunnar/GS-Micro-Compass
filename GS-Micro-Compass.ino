@@ -38,7 +38,7 @@
 #define PROJECT_NAME        "GS-Micro-Compass"
 #define BOOT_LINE1          "GS-Avionik"
 #define BOOT_LINE2          "Micro-Compass"
-#define PROJECT_VERSION     "1.5.0"
+#define PROJECT_VERSION     "1.5.1"
 
 #define PIN_SDA             13      // Port A am M5 Dial
 #define PIN_SCL             15
@@ -68,7 +68,8 @@
 #define COL_CARD    TFT_WHITE
 #define COL_N       TFT_ORANGE
 #define COL_BUG     TFT_CYAN
-#define COL_PLANE   TFT_YELLOW
+#define COL_PLANE   TFT_YELLOW   // nur Flugzeugsymbol und Kurslinie
+#define COL_TITLE   TFT_GREEN    // Überschriften und Statustexte
 
 // ======================= Globals =======================
 static const int CX = 120, CY = 120;
@@ -225,7 +226,7 @@ static void runCalibration() {
     // Anzeige
     canvas.fillSprite(COL_BG);
     canvas.setTextDatum(middle_center);
-    canvas.setTextColor(COL_PLANE);
+    canvas.setTextColor(COL_TITLE);
     canvas.setFont(&fonts::FreeSansBold12pt7b);
     canvas.drawString("KALIBRIERUNG", CX, 50);
     canvas.setTextColor(TFT_WHITE);
@@ -479,10 +480,15 @@ static void startUpdateMode() {
   otaActive = false; otaFinished = false; otaFailed = false;
   otaBytes = 0; otaError[0] = 0;
 
+  // MAC direkt aus dem eFuse lesen (WiFi.macAddress() liefert vor der WLAN-Initialisierung nur Nullen)
+  uint64_t efuse = ESP.getEfuseMac();
+  char macBuf[13];
+  snprintf(macBuf, sizeof(macBuf), "%02X%02X%02X%02X%02X%02X",
+           (uint8_t)(efuse >> 0),  (uint8_t)(efuse >> 8),  (uint8_t)(efuse >> 16),
+           (uint8_t)(efuse >> 24), (uint8_t)(efuse >> 32), (uint8_t)(efuse >> 40));
+  String mac(macBuf);
+
   WiFi.mode(WIFI_AP);
-  String mac = WiFi.macAddress();           // z.B. "A1:B2:C3:D4:E5:F6"
-  mac.replace(":", "");
-  mac.toUpperCase();
   apPass = mac;                             // 12 Zeichen, erfüllt WPA2 (min. 8)
   apSsid = "GS-MC-" + mac.substring(8);     // letzte 4 Stellen der MAC
   WiFi.softAP(apSsid.c_str(), apPass.c_str());
@@ -507,7 +513,7 @@ static void drawUpdateScreen() {
   canvas.setTextDatum(middle_center);
 
   canvas.setFont(&fonts::FreeSansBold12pt7b);
-  canvas.setTextColor(COL_PLANE);
+  canvas.setTextColor(COL_TITLE);
   canvas.drawString("UPDATE", CX, 34);
 
   canvas.setFont(&fonts::FreeSans9pt7b);
@@ -536,7 +542,7 @@ static void drawUpdateScreen() {
     snprintf(buf, sizeof(buf), "Fehler: %s", otaError);
     canvas.drawString(buf, CX, 189);
   } else if (otaActive) {
-    canvas.setTextColor(COL_PLANE);
+    canvas.setTextColor(COL_TITLE);
     snprintf(buf, sizeof(buf), "Empfange %u kB", (unsigned)(otaBytes / 1024));
     canvas.drawString(buf, CX, 189);
   } else {
@@ -573,7 +579,7 @@ static void drawMenu() {
   canvas.fillSprite(COL_BG);
   canvas.setTextDatum(middle_center);
   canvas.setFont(&fonts::FreeSansBold12pt7b);
-  canvas.setTextColor(COL_PLANE);
+  canvas.setTextColor(COL_TITLE);
   canvas.drawString("MENUE", CX, 30);
 
   canvas.setFont(&fonts::FreeSansBold9pt7b);
@@ -596,7 +602,7 @@ static void drawOffsetScreen() {
   canvas.setTextDatum(middle_center);
 
   canvas.setFont(&fonts::FreeSansBold12pt7b);
-  canvas.setTextColor(COL_PLANE);
+  canvas.setTextColor(COL_TITLE);
   canvas.drawString("OFFSET", CX, 38);
 
   // Live-Kurs mit aktuellem Offset
@@ -623,7 +629,7 @@ static void drawDeclScreen() {
   canvas.setTextDatum(middle_center);
 
   canvas.setFont(&fonts::FreeSansBold12pt7b);
-  canvas.setTextColor(COL_PLANE);
+  canvas.setTextColor(COL_TITLE);
   canvas.drawString("DEKLINATION", CX, 38);
 
   snprintf(buf, sizeof(buf), "%03d", (int)lroundf(heading) % 360);
@@ -650,7 +656,7 @@ static void drawInfoScreen() {
   canvas.setTextDatum(middle_center);
 
   canvas.setFont(&fonts::FreeSansBold9pt7b);
-  canvas.setTextColor(COL_PLANE);
+  canvas.setTextColor(COL_TITLE);
   canvas.drawString(PROJECT_NAME, CX, 46);
 
   canvas.setFont(&fonts::FreeSans9pt7b);
@@ -680,7 +686,7 @@ static void drawStyleScreen() {
   canvas.setTextDatum(middle_center);
 
   canvas.setFont(&fonts::FreeSansBold12pt7b);
-  canvas.setTextColor(COL_PLANE);
+  canvas.setTextColor(COL_TITLE);
   canvas.drawString("STIL", CX, 38);
 
   canvas.setFont(&fonts::FreeSansBold18pt7b);
