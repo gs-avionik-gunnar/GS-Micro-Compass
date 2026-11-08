@@ -564,6 +564,24 @@ static void testBootAnim() {
   l.onLongPress(); CHECK(l.page() == DialUi::kMenu);
 }
 
+static void testBootRedrawRate() {
+  resetEnv(0);
+  // with the start page on Info (not the compass) the animation must still be redrawn quickly
+  Settings st = defaultsWithStyle(0);
+  st.startPage = 2;
+  DialUi ui; ui.begin(st, 0);
+  CHECK(ui.page() == DialUi::kInfo);
+  renderFrame(ui, 100);
+  CHECK(ui.fastRedraw());           // animation running
+  renderFrame(ui, 2400);
+  CHECK(ui.fastRedraw());
+  renderFrame(ui, 2600);
+  CHECK(!ui.fastRedraw());          // finished: the info page is static again
+  // the compass keeps the fast rate
+  DialUi c; c.begin(defaultsWithStyle(0), 0); renderFrame(c, 2600);
+  CHECK(c.fastRedraw());
+}
+
 static void testRenderAll() {
   resetEnv(10000);
   for (int st = 0; st < 3; ++st) {
@@ -604,6 +622,7 @@ int main() {
   testCalibration();
   testNoDataBox();
   testBootAnim();
+  testBootRedrawRate();
   testRenderAll();
   printf("%d checks, %d failed\n", g_n, g_fail);
   return g_fail ? 1 : 0;

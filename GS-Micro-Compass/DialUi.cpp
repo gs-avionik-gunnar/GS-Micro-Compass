@@ -80,6 +80,7 @@ int DialUi::curItem() const {
 }
 
 bool DialUi::fastRedraw() const {
+  if (splashActive()) return true;  // the boot animation needs ~25 frames per second on every start page
   if (rebooting_ || confirm_) return false;
   return page_ == kCompass || calUi_ != 0 || (page_ == kMenu && menuOpen_ && menuCat_ == 1);
 }

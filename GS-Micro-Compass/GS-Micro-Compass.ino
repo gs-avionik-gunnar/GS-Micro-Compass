@@ -1,4 +1,4 @@
-// GS-Micro-Compass 2.1 - magnetic compass with three instrument styles (ESP32-S3, round display, wheel).
+// GS-Micro-Compass 2.1.1 - magnetic compass with three instrument styles (ESP32-S3, round display, wheel).
 //
 // Architecture (see README.md):
 //   Compass.*     heading, filter, calibration, shared state       (pure C++, unit-tested)

@@ -1,4 +1,4 @@
-# GS-Micro-Compass 2.1
+# GS-Micro-Compass 2.1.1
 
 Magnetic compass (ESP32-S3, round 240x240 display, wheel with button, buzzer) with a GY-271 magnetometer
 (QMC5883L or HMC5883L, detected automatically) on the Grove port. Three display styles, a heading bug, a settings menu and a
@@ -117,6 +117,7 @@ Tests: `make -C test run` (unit tests), `make -C test syntax` (glue against stub
 NVS namespace `gsmc2` (keys up to 15 characters), calibration in `gsmcal`. Limits are defined once in `settingsSanitize()`.
 
 ## Version history
+- **2.1.1** The boot animation redraws at full speed on every start page (with start page WiFi or Info it would have run at 5 frames per second).
 - **2.1** Animated boot logo: scale ring builds up, a radar beam sweeps once around it while the texts fade in (2.5 s, a click
   skips it). The animation is a separate module (`BootAnim.*`) without any product reference, reusable in other GS software.
 - **2.0** Port to the GS Dial template (boot screen, info page, menu, WebUI, settings, tests). Own display driver instead of an
