@@ -1,11 +1,11 @@
-// GS-Micro-Compass 2.0 - magnetic compass with three instrument styles (ESP32-S3, round display, wheel).
+// GS-Micro-Compass 2.1 - magnetic compass with three instrument styles (ESP32-S3, round display, wheel).
 //
 // Architecture (see README.md):
 //   Compass.*     heading, filter, calibration, shared state       (pure C++, unit-tested)
 //   Mag.*         GY-271 driver (QMC5883L / HMC5883L, plain I2C)
 //   Settings*.*   NVS persistence, defaults and limits, migration from 1.x
 //   WebUi.*       access point + HTTP UI + OTA (own FreeRTOS task, only while WiFi is on)
-//   Gfx/DialUi/DialHw/DialFont  round display, wheel, buzzer
+//   Gfx/DialUi/DialHw/DialFont/BootAnim  round display, wheel, buzzer, boot logo animation
 //
 // Build with the Arduino IDE: board "ESP32S3 Dev Module", Arduino-ESP32 core 2.0.x or 3.x.
 // No additional libraries are needed.

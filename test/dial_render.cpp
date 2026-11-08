@@ -108,7 +108,10 @@ int main(int argc, char** argv) {
     env.comp.calActive = false; env.comp.calResult = 1;
     snprintf(name, sizeof name, "%s/cal_ok.ppm", dir); dump(cu, now + 50, name);
     env.comp.calResult = 0; }
-  // splash
-  { DialUi su; su.begin(s, now - 100); snprintf(name, sizeof name, "%s/splash.ppm", dir); dump(su, now, name); }
+  // boot animation
+  { DialUi su; su.begin(s, 0);
+    const uint32_t ts[8] = {250, 600, 950, 1250, 1550, 1850, 2150, 2450};
+    for (int i = 0; i < 8; ++i) { snprintf(name, sizeof name, "%s/boot_%d.ppm", dir, i); dump(su, ts[i], name); } }
+  { DialUi su; su.begin(s, now - 100); snprintf(name, sizeof name, "%s/splash.ppm", dir); dump(su, now + 2300, name); }
   return 0;
 }

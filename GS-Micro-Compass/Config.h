@@ -1,7 +1,7 @@
 #pragma once
 
 // One place for the firmware version: boot screen, info page, WebUI, README.
-#define GS_FW_VERSION "2.0"
+#define GS_FW_VERSION "2.1"
 #define GS_PRODUCT_NAME "GS-Micro-Compass"
 
 // ---- Magnetometer GY-271 (QMC5883L or HMC5883L, detected automatically) on the Grove port ------------------

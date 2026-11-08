@@ -87,6 +87,8 @@ class DialUi {
   void drawDots(gfx::Canvas& c);
   void title(gfx::Canvas& c, const char* t, int y = 12);
   void leaveMenu();
+  bool splashActive() const;  // the boot animation is on screen
+  void skipSplash();
 
   Settings set_;      // working copy of the settings
   Settings orig_;     // as loaded / saved, to detect changes
@@ -108,4 +110,5 @@ class DialUi {
   bool beep_ = false;
   bool dirty_ = true;
   bool rebooting_ = false;
+  bool splashShown_ = false;  // the boot animation has been drawn (input then skips it instead of acting)
 };

@@ -1,6 +1,6 @@
 SKETCH := ../GS-Micro-Compass
 CXXFLAGS := -std=gnu++11 -O1 -g -Wall -Wextra -I$(SKETCH)
-CORE := $(SKETCH)/Compass.cpp $(SKETCH)/SettingsCore.cpp $(SKETCH)/Gfx.cpp $(SKETCH)/DialUi.cpp $(SKETCH)/DialFont.cpp
+CORE := $(SKETCH)/Compass.cpp $(SKETCH)/SettingsCore.cpp $(SKETCH)/Gfx.cpp $(SKETCH)/DialUi.cpp $(SKETCH)/DialFont.cpp $(SKETCH)/BootAnim.cpp
 
 all: run
 

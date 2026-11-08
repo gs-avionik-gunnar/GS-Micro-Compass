@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "BootAnim.h"
 #include "Compass.h"
 #include "DialUi.h"
 #include "Settings.h"
@@ -519,6 +520,50 @@ static void testNoDataBox() {
   }
 }
 
+static int countRgb(DialUi& ui, uint32_t now, uint16_t col) { return countColor(ui, now, col); }
+
+static void testBootAnim() {
+  resetEnv(0);
+  // every frame of the animation renders (also far beyond the end) and the frames really change
+  gfx::Canvas c;
+  static uint16_t first[240 * 30], other[240 * 30];
+  bool changed = false;
+  for (uint32_t t = 0; t <= bootanim::kDurationMs + 500; t += 50) {
+    c.setBand(band, 90, 30);
+    bootanim::draw(c, t, "GS Avionik", "Product", "v1.0");
+    if (t == 0) memcpy(first, band, sizeof first);
+    if (t == 1000) memcpy(other, band, sizeof other);
+  }
+  changed = memcmp(first, other, sizeof first) != 0;
+  CHECK(changed);
+  // before the start there is nothing, at the end the three lines are readable at the template positions
+  DialUi ui; ui.begin(defaultsWithStyle(0), 0);
+  CHECK(countRgb(ui, 0, gfx::kGreen) == 0);
+  CHECK(countRgb(ui, 2400, gfx::kGreen) > 500);   // ring, ticks and the title
+  CHECK(countRgb(ui, 2400, gfx::kWhite) > 100);   // product name
+  // the same final frame as the old static boot screen: texts only inside the ring
+  // after the animation the compass appears
+  CHECK(countRgb(ui, 2600, gfx::kYellow) > 0);
+  // a click skips the animation, a wheel turn is ignored while it runs
+  DialUi k; k.begin(defaultsWithStyle(0), 0);
+  unsigned bug = k.settings().bug;
+  renderFrame(k, 300);
+  k.onRotate(1);
+  CHECK(k.settings().bug == bug);              // ignored during the animation
+  k.onClick();
+  CHECK(k.takeAction() == kDialNone && k.settings().bug == bug);  // the click only skipped
+  CHECK(countRgb(k, 400, gfx::kYellow) > 0);   // compass already visible
+  k.onRotate(1);
+  CHECK(k.settings().bug == bug + 1);          // now the wheel works
+  // a long press skips as well and does not open the menu
+  DialUi l; l.begin(defaultsWithStyle(0), 0);
+  renderFrame(l, 300);
+  l.onLongPress();
+  renderFrame(l, 350);
+  CHECK(l.page() == DialUi::kCompass);
+  l.onLongPress(); CHECK(l.page() == DialUi::kMenu);
+}
+
 static void testRenderAll() {
   resetEnv(10000);
   for (int st = 0; st < 3; ++st) {
@@ -536,10 +581,9 @@ static void testRenderAll() {
     env.comp.lastRxMs = 10000;
     for (int p = 0; p < DialUi::kPageCount; ++p) { ui.gotoPage(p); renderFrame(ui, 10000); }
   }
-  // splash within the first 2.5 s
-  DialUi ui; ui.begin(defaultsWithStyle(0), 100); renderFrame(ui, 200);
-  // splash pixels: the first band has no text, the top rows stay black
-  gfx::Canvas c; c.setBand(band, 0, 30); ui.render(c, env, 200);
+  // boot animation within the first 2.5 s; its very first frame (t = 0) is still completely black
+  DialUi ui; ui.begin(defaultsWithStyle(0), 100); renderFrame(ui, 150);
+  gfx::Canvas c; c.setBand(band, 0, 30); ui.render(c, env, 100);
   bool allBlack = true; for (int i = 0; i < 240 * 30; ++i) if (band[i] != gfx::kBlack) allBlack = false;
   CHECK(allBlack);
 }
@@ -559,6 +603,7 @@ int main() {
   testWifi();
   testCalibration();
   testNoDataBox();
+  testBootAnim();
   testRenderAll();
   printf("%d checks, %d failed\n", g_n, g_fail);
   return g_fail ? 1 : 0;

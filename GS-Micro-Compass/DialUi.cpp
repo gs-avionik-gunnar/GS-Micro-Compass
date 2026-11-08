@@ -1,5 +1,7 @@
 #include "DialUi.h"
 
+#include "BootAnim.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -84,8 +86,16 @@ bool DialUi::fastRedraw() const {
 
 float DialUi::heading(const DialEnv& e) const { return compass::applyOffsets(e.comp.rawDeg, set_.declTenths, set_.offsetDeg); }
 
+bool DialUi::splashActive() const { return splashShown_ && compass::State::age(now_, t0_) < bootanim::kDurationMs; }
+
+void DialUi::skipSplash() {
+  t0_ = now_ - bootanim::kDurationMs;  // ends the animation with the next frame
+  splashShown_ = false;
+  dirty_ = true;
+}
+
 void DialUi::onRotate(int steps) {
-  if (steps == 0 || rebooting_) return;
+  if (steps == 0 || rebooting_ || splashActive()) return;
   if (page_ == kCompass && !confirm_ && !calUi_ && set_.style != kStyleInstrument) return;  // nothing to turn on this compass
   beep_ = true;
   dirty_ = true;
@@ -142,6 +152,10 @@ void DialUi::leaveMenu() {
 
 void DialUi::onClick() {
   if (rebooting_) return;
+  if (splashActive()) {
+    skipSplash();
+    return;
+  }
   beep_ = true;
   dirty_ = true;
   if (confirm_) {
@@ -220,6 +234,10 @@ void DialUi::onClick() {
 
 void DialUi::onLongPress() {
   if (rebooting_) return;
+  if (splashActive()) {
+    skipSplash();
+    return;
+  }
   beep_ = true;
   dirty_ = true;
   confirm_ = 0;
@@ -490,11 +508,9 @@ void DialUi::drawCal(Canvas& c, const DialEnv& e) {
 }
 
 void DialUi::drawSplash(Canvas& c, const DialEnv& e) {
-  c.text(kFontMedium, 120, 80, Center, kGreen, "GS Avionik");
-  c.text(kFontSmall, 120, 114, Center, kWhite, "GS-Micro-Compass");
   char b[32];
   snprintf(b, sizeof b, "v%s", e.fw);
-  c.text(kFontSmall, 120, 138, Center, kGrey, b);
+  bootanim::draw(c, compass::State::age(now_, t0_), "GS Avionik", "GS-Micro-Compass", b);
 }
 
 void DialUi::render(Canvas& c, const DialEnv& env, uint32_t now) {
@@ -527,10 +543,12 @@ void DialUi::render(Canvas& c, const DialEnv& env, uint32_t now) {
     c.text(kFontMedium, 120, 100, Center, kGreen, action_ == kDialFactoryReset ? "Resetting..." : "Restarting...");
     return;
   }
-  if (compass::State::age(now, t0_) < 2500) {
+  if (compass::State::age(now, t0_) < bootanim::kDurationMs) {
+    splashShown_ = true;
     drawSplash(c, env);
     return;
   }
+  splashShown_ = false;
   if (confirm_) {
     drawConfirm(c);
     return;

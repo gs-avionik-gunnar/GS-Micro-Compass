@@ -1,4 +1,4 @@
-# GS-Micro-Compass 2.0
+# GS-Micro-Compass 2.1
 
 Magnetic compass (ESP32-S3, round 240x240 display, wheel with button, buzzer) with a GY-271 magnetometer
 (QMC5883L or HMC5883L, detected automatically) on the Grove port. Three display styles, a heading bug, a settings menu and a
@@ -26,6 +26,7 @@ Arduino IDE, **no external libraries**: display driver, fonts, wheel, buzzer and
 - WebUI (English / German) with help texts and firmware update
 - Settings on the display: brightness, style, start page, calibration, offset, declination, WiFi at boot, restart, factory reset
 - Serial output for debugging and for the serial plotter
+- Animated boot logo (radar sweep), product-neutral; a click skips it
 
 ## What 2.0 brings
 
@@ -101,6 +102,7 @@ GS-Micro-Compass/        the sketch
   Settings.h, SettingsCore.cpp (defaults, limits), Settings.cpp (NVS, migration)
   App.*                  shared state, mutex
   Gfx.*, DialFont.*      band renderer and fonts (copied from the template)
+  BootAnim.*             boot logo animation, product-neutral (name and version are passed in)
   DialUi.*               pages, menu, the three styles (pure C++)
   DialHw.*               display, wheel, buzzer, actions (own FreeRTOS task)
   WebUi.*, WebPage.h     access point, HTTP, OTA
@@ -115,6 +117,8 @@ Tests: `make -C test run` (unit tests), `make -C test syntax` (glue against stub
 NVS namespace `gsmc2` (keys up to 15 characters), calibration in `gsmcal`. Limits are defined once in `settingsSanitize()`.
 
 ## Version history
+- **2.1** Animated boot logo: scale ring builds up, a radar beam sweeps once around it while the texts fade in (2.5 s, a click
+  skips it). The animation is a separate module (`BootAnim.*`) without any product reference, reusable in other GS software.
 - **2.0** Port to the GS Dial template (boot screen, info page, menu, WebUI, settings, tests). Own display driver instead of an
   external library. WiFi on demand with the WebUI and firmware update. Takeover of the 1.x settings.
 - **1.5.1** The MAC address for the WiFi name and key is read from the eFuse (it was all zeros before). Headings in green.
