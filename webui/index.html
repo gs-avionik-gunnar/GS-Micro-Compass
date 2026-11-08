@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GS-Micro-Compass</title>
+<link rel="icon" href="data:,">
+<style>
+:root{--bg:#f0e6d3;--fg:#002130;--ac:#fe7139;--card:#fff;--mut:#6b7780;--ok:#2a9d4a;--bad:#d62828}
+*{box-sizing:border-box}body{margin:0;font:15px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+header{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--fg);color:#fff}
+header h1{font-size:18px;margin:0;flex:1}#led{width:14px;height:14px;border-radius:50%;background:#888;box-shadow:0 0 0 2px #fff4}
+nav{display:flex;gap:6px;padding:8px 14px;flex-wrap:wrap}
+nav button{border:0;padding:8px 14px;border-radius:6px;background:var(--card);color:var(--ac);font-size:15px;cursor:pointer}
+nav button.on{background:var(--ac);color:#fff}
+main{padding:0 14px 30px;max-width:900px}section{display:none}section.on{display:block}
+.card{background:var(--card);border-radius:8px;padding:12px 14px;margin:0 0 12px}
+.card h2{font-size:14px;margin:0 0 8px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:3px 14px}.kv span:nth-child(odd){color:var(--mut)}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:4px 6px;border-bottom:1px solid #eee}
+label{display:block;margin:8px 0 2px;font-weight:600}.chk{display:flex;gap:8px;align-items:center;font-weight:600;margin:8px 0}
+input[type=text],input[type=password],input[type=number],select{width:100%;padding:7px;border:1px solid #bbb;border-radius:6px;font-size:15px}
+small{color:var(--mut);display:block;font-weight:400}
+.f{margin:0 0 12px}.f>label{display:block;margin:0 0 2px;font-weight:600}.f>label.chk{margin:8px 0 2px}
+.help{margin:2px 0 0;font-size:13px;color:var(--mut);font-weight:400}.nohelp .help{display:none}.nohelp .help.intro{display:block}
+.helpsw{justify-content:flex-end;font-weight:400;font-size:13px;margin:0 0 10px}
+h3{font-size:14px;margin:12px 0 4px}details{margin:6px 0 12px;border:1px solid #ddd;border-radius:6px;padding:6px 10px}summary{cursor:pointer;font-weight:600}
+#cmsg{margin-top:10px;font-weight:600}#cmsg.err{color:var(--bad)}input:invalid{border-color:var(--bad);background:#fff4f4}
+.btn{border:0;padding:10px 16px;border-radius:6px;background:var(--ac);color:#fff;font-size:15px;cursor:pointer;margin:8px 8px 0 0}
+.btn.sec{background:var(--card);color:var(--bad);border:1px solid var(--bad)}
+#lang{border:0;cursor:pointer;background:#fff;color:var(--fg)}.tag{display:inline-block;padding:1px 8px;border-radius:10px;background:#eee;font-size:12px}
+.tag.ok{background:var(--ok);color:#fff}.tag.bad{background:var(--bad);color:#fff}
+</style></head><body>
+<!-- ===== SHARED: header (product name, language switch, connection tag, status LED) ===== -->
+<header><h1>GS-Micro-Compass</h1><button id="lang" class="tag" type="button" title="Language / Sprache">Deutsch</button><span id="conn" class="tag">…</span><div id="led" title="status LED"></div></header>
+<!-- ===== SHARED: tabs. Status / Configuration / Firmware are mandatory and keep this order; product tabs go between Status and Configuration ===== -->
+<nav><button data-t="status" class="on">Status</button><button data-t="config">Configuration</button><button data-t="update">Firmware</button></nav>
+<main>
+<section id="status" class="on">
+<div class="card"><h2>Device</h2><div class="kv" id="sys"></div></div>
+<!-- PRODUCT: replace/extend with product status cards (kv lists, tables, tags) -->
+<div class="card"><h2>Compass</h2><div class="kv" id="prod"></div></div>
+<div class="card"><h2>Sensor</h2><div class="kv" id="sens"></div></div>
+</section>
+<!-- PRODUCT: additional tabs (Flights, Databases, ...) are <section id="..."> with a matching <button data-t="..."> -->
+<section id="config"><form id="cf" class="card" novalidate>
+<label class="chk helpsw"><input type="checkbox" id="showhelp" checked>Show help texts</label>
+<!-- SHARED: every settings group is a collapsed <details>; every field is <div class="f"> with a .help paragraph -->
+<details><summary>Display</summary>
+<div class="f"><label>Brightness (10-100 %)<input type="number" name="dialBright" min="10" max="100" step="1" required></label><p class="help">Backlight of the round display.</p></div>
+<div class="f"><label>Style<select name="style"><option value="0">Instrument</option><option value="1">Whiskey compass</option><option value="2">Vertical card</option></select></label><p class="help">Instrument: rotating card with aircraft symbol and heading bug. Whiskey compass: brass bowl with rotating card, no bug. Vertical card: card running sideways behind a window, no bug. Can also be changed on the unit.</p></div>
+<div class="f"><label>Start page<select name="startPage"><option value="0">Compass</option><option value="1">WiFi</option><option value="2">Info</option></select></label><p class="help">Page shown after power-up.</p></div>
+<div class="f"><label>Heading bug (0-359)<input type="number" name="bug" min="0" max="359" step="1" required></label><p class="help">Only used by the instrument style. On the unit the wheel sets the bug.</p></div>
+</details>
+<details><summary>Compass</summary>
+<div class="f"><label>Offset (-180 to 180 degrees)<input type="number" name="offsetDeg" min="-180" max="180" step="1" required></label><p class="help">Added to the heading. Corrects how the sensor board is turned relative to the display.</p></div>
+<div class="f"><label>Declination (-30.0 to 30.0 degrees)<input type="number" name="decl" min="-30" max="30" step="0.1" required></label><p class="help">Difference between magnetic and true north, east is positive (about +4.0 in northern Germany). 0 shows the magnetic heading.</p></div>
+<div class="f"><label>Smoothing (5-100 %)<input type="number" name="smooth" min="5" max="100" step="1" required></label><p class="help">Low values make the card calmer but slower, 100 switches the smoothing off.</p></div>
+</details>
+<details><summary>Sensor mounting</summary>
+<div class="f"><label class="chk"><input type="checkbox" name="swapXY">Swap X and Y</label><p class="help">Use if the sensor board is turned by 90 degrees.</p></div>
+<div class="f"><label class="chk"><input type="checkbox" name="invX">Invert X</label><p class="help">Mirrors the X axis.</p></div>
+<div class="f"><label class="chk"><input type="checkbox" name="invY">Invert Y</label><p class="help">Mirrors the Y axis. Use if the heading decreases when you turn the unit clockwise.</p></div>
+</details>
+<details><summary>WiFi</summary>
+<div class="f"><label>SSID<input type="text" name="ssid" maxlength="32" required></label><p class="help">Name of the access point (default GS-MC- and the last four digits of the MAC address).</p></div>
+<div class="f"><label>WPA key (8-63 characters)<input type="password" name="wpakey" minlength="8" maxlength="63" autocomplete="new-password"></label><p class="help">Leave empty to keep the current key. The default key is the MAC address.</p></div>
+<div class="f"><label class="chk"><input type="checkbox" name="wifiBoot">WiFi on at power-up</label><p class="help">Off by default: the WiFi radio can disturb the compass sensor. Switch it on and off on the WiFi page of the unit.</p></div>
+</details>
+<details><summary>Debug and test</summary>
+<div class="f"><label>Serial output<select name="debug"><option value="0">Off</option><option value="1">Heading (2 per second)</option><option value="2">Raw values for the serial plotter</option></select></label><p class="help">Prints to the USB serial port at 115200 baud.</p></div>
+</details>
+<button class="btn" type="submit">Save &amp; reboot</button><button class="btn sec" type="button" id="rst">Reset to defaults</button>
+<div id="cmsg" role="alert"></div></form></section>
+<section id="update"><div class="card"><h2>Firmware update</h2>
+<p><span>Running</span> <b id="fw"></b></p><p>Select a .bin file. Do not interrupt power during the update.</p>
+<input type="file" id="bin" accept=".bin"><br><button class="btn" id="go">Start update</button><div id="prg"></div></div></section>
+</main>
+<script>
+/* ===== SHARED: German strings. Key = the English text exactly as it appears in the page. Add product strings at the end. ===== */
+const DE={"Status": "Status","Configuration": "Konfiguration","Firmware": "Firmware","Show help texts": "Hilfetexte anzeigen","Save & reboot": "Speichern & Neustart","Reset to defaults": "Auf Standard zurücksetzen","Firmware update": "Firmware-Update","Running": "Aktuell","Select a .bin file. Do not interrupt power during the update.": "Wähle eine .bin-Datei. Die Stromversorgung während des Updates nicht unterbrechen.","Start update": "Update starten","online": "online","offline": "offline","Please correct the highlighted fields.": "Bitte die markierten Felder korrigieren.","Saving...": "Speichere...","Connection lost. The module may already be rebooting - reconnect and check the settings.": "Verbindung verloren. Das Modul startet eventuell schon neu - neu verbinden und Einstellungen prüfen.","Saved. Rebooting - reconnect to the module's WiFi and reload this page.": "Gespeichert. Neustart - mit dem WLAN des Moduls neu verbinden und diese Seite neu laden.","Error: ": "Fehler: ","Reset all settings to defaults and reboot?": "Alle Einstellungen auf Standard zurücksetzen und neu starten?","Reset. Rebooting...": "Zurückgesetzt. Neustart...","Select a file first": "Bitte zuerst eine Datei wählen","Upload ": "Upload ","Update OK. Rebooting...": "Update OK. Neustart...","Update failed: ": "Update fehlgeschlagen: ","Connection lost. If the module rebooted, reload the page and check the firmware version.": "Verbindung verloren. Falls das Modul neu gestartet ist, Seite neu laden und Firmware-Version prüfen.","Hardware": "Hardware","Uptime": "Laufzeit","Free heap": "Freier Heap","on": "an","off": "aus","yes": "ja","no": "nein","none": "keine","status LED": "Status-LED","Debug and test": "Debug und Test","Info": "Info","Device": "Gerät","Compass": "Kompass","Sensor": "Sensor","Display": "Anzeige","Brightness (10-100 %)": "Helligkeit (10-100 %)","Backlight of the round display.": "Hintergrundbeleuchtung des runden Displays.","Style": "Stil","Instrument": "Instrument","Whiskey compass": "Schnapskompass","Vertical card": "Vertikalkarte","Instrument: rotating card with aircraft symbol and heading bug. Whiskey compass: brass bowl with rotating card, no bug. Vertical card: card running sideways behind a window, no bug. Can also be changed on the unit.": "Instrument: drehende Rose mit Flugzeugsymbol und Heading-Bug. Schnapskompass: Messingschale mit drehender Rose, ohne Bug. Vertikalkarte: seitlich laufende Karte hinter einem Fenster, ohne Bug. Lässt sich auch am Gerät ändern.","Start page": "Startseite","Page shown after power-up.": "Seite, die nach dem Einschalten angezeigt wird.","Heading bug (0-359)": "Heading-Bug (0-359)","Only used by the instrument style. On the unit the wheel sets the bug.": "Wird nur im Instrument-Stil verwendet. Am Gerät stellt das Drehrad den Bug ein.","Offset (-180 to 180 degrees)": "Offset (-180 bis 180 Grad)","Added to the heading. Corrects how the sensor board is turned relative to the display.": "Wird zum Kurs addiert. Gleicht aus, wie die Sensorplatine zum Display gedreht ist.","Declination (-30.0 to 30.0 degrees)": "Missweisung (-30,0 bis 30,0 Grad)","Difference between magnetic and true north, east is positive (about +4.0 in northern Germany). 0 shows the magnetic heading.": "Unterschied zwischen magnetisch und rechtweisend Nord, Ost ist positiv (in Norddeutschland etwa +4,0). Bei 0 wird der magnetische Kurs angezeigt.","Smoothing (5-100 %)": "Glättung (5-100 %)","Low values make the card calmer but slower, 100 switches the smoothing off.": "Niedrige Werte machen die Rose ruhiger, aber träger, 100 schaltet die Glättung aus.","Sensor mounting": "Sensor-Einbaulage","Swap X and Y": "X und Y vertauschen","Use if the sensor board is turned by 90 degrees.": "Verwenden, wenn die Sensorplatine um 90 Grad gedreht ist.","Invert X": "X invertieren","Mirrors the X axis.": "Spiegelt die X-Achse.","Invert Y": "Y invertieren","Mirrors the Y axis. Use if the heading decreases when you turn the unit clockwise.": "Spiegelt die Y-Achse. Verwenden, wenn der Kurs beim Drehen im Uhrzeigersinn abnimmt.","WiFi": "WLAN","SSID": "SSID","Name of the access point (default GS-MC- and the last four digits of the MAC address).": "Name des Access Points (Standard GS-MC- und die letzten vier Stellen der MAC-Adresse).","WPA key (8-63 characters)": "WPA-Schlüssel (8-63 Zeichen)","Leave empty to keep the current key. The default key is the MAC address.": "Leer lassen, um den aktuellen Schlüssel zu behalten. Der Standardschlüssel ist die MAC-Adresse.","WiFi on at power-up": "WLAN beim Einschalten an","Off by default: the WiFi radio can disturb the compass sensor. Switch it on and off on the WiFi page of the unit.": "Standardmäßig aus: Die WLAN-Funkeinheit kann den Kompasssensor stören. Ein- und Ausschalten auf der WLAN-Seite des Geräts.","Serial output": "Serielle Ausgabe","Off": "Aus","Heading (2 per second)": "Kurs (2 pro Sekunde)","Raw values for the serial plotter": "Rohwerte für den seriellen Plotter","Prints to the USB serial port at 115200 baud.": "Gibt über den USB-Port mit 115200 Baud aus.","Heading": "Kurs","Heading bug": "Heading-Bug","Declination": "Missweisung","WiFi clients": "WLAN-Clients","Calibrated": "Kalibriert","Calibration range X / Y": "Kalibrierbereich X / Y","Raw X / Y / Z": "Rohwerte X / Y / Z"};
+/* ===== SHARED: language (browser language by default, button in the header, remembered), tr() translates all text nodes ===== */
+let LANG='en';try{LANG=localStorage.getItem('gslang')||((navigator.language||'').slice(0,2)=='de'?'de':'en')}catch(e){}
+const T=x=>(LANG=='de'&&DE[x])||x;
+const $=s=>document.querySelector(s),kv=(a)=>a.map(x=>`<span>${T(x[0])}</span><span>${x[1]}</span>`).join('');
+function tr(){const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),L=[];let n;while(n=w.nextNode())L.push(n);
+for(const n of L){if(n.parentNode.closest('script,.kv,tbody,#conn,#cmsg,#prg,#fw'))continue;if(n._o===undefined){const t=n.nodeValue.trim();if(!t||!DE[t])continue;n._o=n.nodeValue}const t=n._o.trim();n.nodeValue=n._o.replace(t,T(t))}
+document.querySelectorAll('[title],[placeholder]').forEach(e=>{for(const a of['title','placeholder']){if(!e.hasAttribute(a))continue;const k='o'+a;if(e[k]===undefined)e[k]=e.getAttribute(a);if(DE[e[k]]||e[k]){e.setAttribute(a,T(e[k]))}}});
+document.documentElement.lang=LANG;$('#lang').textContent=LANG=='de'?'English':'Deutsch';$('#conn').textContent=T($('#conn').dataset.s||'…')}
+$('#lang').onclick=()=>{LANG=LANG=='de'?'en':'de';try{localStorage.setItem('gslang',LANG)}catch(e){}tr();poll()};
+/* ===== SHARED: tab switching; add a load call per product tab ===== */
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button,section').forEach(e=>e.classList.remove('on'));b.classList.add('on');$('#'+b.dataset.t).classList.add('on');if(b.dataset.t=='config')loadCfg()});
+/* ===== SHARED: helpers and status polling (1 Hz). The product fills its own cards in poll(). Required keys of /api/status: fw, hw, up, heap, minHeap, led ===== */
+const up=s=>{s=Math.floor(s);return Math.floor(s/3600)+'h '+Math.floor(s/60)%60+'m '+s%60+'s'};
+const LC=['#888','#2dd64f','#e63232','#ff9900'];let busy=false;
+async function poll(){if(busy)return;busy=true;try{const d=await(await fetch('/api/status',{cache:'no-store'})).json();
+$('#conn').dataset.s='online';$('#conn').textContent=T('online');$('#conn').className='tag ok';$('#led').style.background=LC[d.led]||LC[0];$('#fw').textContent=d.fw;
+$('#sys').innerHTML=kv([['Firmware',d.fw],['Hardware',d.hw],['Uptime',up(d.up)],['Free heap',d.heap+' B (min '+d.minHeap+' B)']]);
+/* PRODUCT: fill the product cards here, for example $('#prod').innerHTML=kv([['Example value',d.example]]); */
+const sty=['Instrument','Whiskey compass','Vertical card'];
+$('#prod').innerHTML=kv([['Heading',d.valid?d.heading.toFixed(1)+'°':'–'],['Heading bug',d.bug+'°'],['Style',T(sty[d.style]||'?')],['Offset',d.offset+'°'],['Declination',(d.decl>0?'+':'')+d.decl+'°'],['WiFi clients',d.stations]]);
+$('#sens').innerHTML=kv([['Sensor',d.sensor=='none'?T('none'):d.sensor],['Calibrated',d.calibrated?T('yes'):T('no')],['Calibration range X / Y',Math.round(d.spanX)+' / '+Math.round(d.spanY)],['Raw X / Y / Z',d.rawX+' / '+d.rawY+' / '+d.rawZ]]);
+}catch(e){$('#conn').dataset.s='offline';$('#conn').textContent=T('offline');$('#conn').className='tag bad'}busy=false}
+setInterval(poll,1000);poll();
+/* ===== SHARED: configuration form. /api/config GET returns {name:value} for every form field, POST takes the form (checkbox = "on") ===== */
+const CF=n=>$('#cf [name='+n+']');
+async function loadCfg(){const c=await(await fetch('/api/config',{cache:'no-store'})).json();
+for(const e of $('#cf').elements){if(!e.name)continue;if(e.type=='checkbox')e.checked=!!c[e.name];else e.value=c[e.name]==null?'':c[e.name]}}
+const sh=$('#showhelp');try{if(localStorage.getItem('gshelp')=='0')sh.checked=false}catch(e){}
+const applyHelp=()=>{$('#cf').classList.toggle('nohelp',!sh.checked);try{localStorage.setItem('gshelp',sh.checked?'1':'0')}catch(e){}};sh.onchange=applyHelp;applyHelp();
+$('#cf').onsubmit=async ev=>{ev.preventDefault();const m=$('#cmsg');m.className='';
+if(!$('#cf').checkValidity()){for(const e of $('#cf').elements)if(!e.checkValidity()){const d=e.closest('details');if(d)d.open=true}m.className='err';m.textContent=T('Please correct the highlighted fields.');$('#cf').reportValidity();return}
+const b=new URLSearchParams(new FormData($('#cf')));b.delete('showhelp');m.textContent=T('Saving...');
+let r;try{r=await fetch('/api/config',{method:'POST',body:b})}catch(e){m.className='err';m.textContent=T('Connection lost. The module may already be rebooting - reconnect and check the settings.');return}
+if(r.ok){m.textContent=T('Saved. Rebooting - reconnect to the module\'s WiFi and reload this page.')}else{m.className='err';m.textContent=T('Error: ')+await r.text()}};
+$('#rst').onclick=async()=>{if(confirm(T('Reset all settings to defaults and reboot?'))){await fetch('/api/reset',{method:'POST'});$('#cmsg').textContent=T('Reset. Rebooting...')}};
+/* ===== SHARED: firmware update (POST /update, multipart field "update") ===== */
+$('#go').onclick=()=>{const fl=$('#bin').files[0];if(!fl){$('#prg').textContent=T('Select a file first');return}
+const x=new XMLHttpRequest(),fd=new FormData();fd.append('update',fl);x.open('POST','/update');
+x.upload.onprogress=e=>{if(e.lengthComputable)$('#prg').textContent=T('Upload ')+Math.round(100*e.loaded/e.total)+'%'};
+x.onload=()=>{$('#prg').textContent=x.status==200?T('Update OK. Rebooting...'):T('Update failed: ')+x.responseText};
+x.onerror=()=>{$('#prg').textContent=T('Connection lost. If the module rebooted, reload the page and check the firmware version.')};x.send(fd)};
+tr();
+</script></body></html>
